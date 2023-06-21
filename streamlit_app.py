@@ -45,8 +45,7 @@ completion_tmp = openai.ChatCompletion.create(
 )
 question = completion_tmp.choices[0].message.content
 
-st.text("ChatGPT:")
-st.text(a1message)
+st.markdown(a1message)
 aizuchi = ''
 i = 0
 while True:
@@ -59,8 +58,9 @@ while True:
     if not check:
         st.stop()
     i += 1
-    if st.checkbox("対話を終了"):
+    if st.checkbox("対話を終了", key=i):
         break
+    i += 1
     # 質問に答えてもらう
     choice = {"role": "user", "content": user_input}  # 質問候補文
     assistant_1.append(choice)
@@ -69,14 +69,13 @@ while True:
         model="gpt-3.5-turbo",
         messages=assistant_1
     )
-    st.text("ChatGPT:")
     if "ません" in completion.choices[0].message.content:
         st.text("検索しています")
         result = kensaku.searchfromquestion(user_input)
-        st.text(result)
+        st.markdown(result)
         dialog.append(result)
     else:
-        st.text(completion.choices[0].message.content)
+        st.markdown(completion.choices[0].message.content)
         dialog.append(completion.choices[0].message.content)
     completion2 = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",

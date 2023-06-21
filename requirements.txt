@@ -1,1 +1,2 @@
 altair<5
+openai==0.25.0
