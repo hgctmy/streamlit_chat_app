@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
+import os
 import streamlit as st
 import openai
 import kensaku
+from os.path import join, dirname
+from dotenv import load_dotenv
+
+load_dotenv(join(dirname(__file__), '.env'))
+openai.api_key = os.environ.get("API_KEY")
 
 
 st.title("ニュース解説チャットボット")
@@ -9,9 +15,6 @@ st.header("選んだニュースをチャットボットが対話形式で解説
 
 kiji = st.radio("記事を選んでください\n1. 記事1のタイトル\n2. 記事2のタイトル", (1, 2))
 
-
-KEY = "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"
-openai.api_key = KEY
 
 # 説明してもらう文章
 # exampletexts = "くらやみ祭り（くらやみまつり）は、主に5月3日〜6日にかけて東京都府中市の大國魂神社（武蔵国の国府である当地の総社）で行われる例大祭で、武蔵国の「国府祭」を起源としており、東京都指定無形民俗文化財となっている。期間中は約70万人の人出で賑わう。古く武蔵国の国府で行われた国府祭を由来とする、長い伝統と格式を誇る大國魂神社の「例大祭」である。室町時代の文書には「五月会」と記録があり、江戸中から見物人が多く訪れていた。その後は、地域住民の祭礼へと発展していった。かつて街の明かりを消した深夜の暗闇の中で行われていたため「くらやみ祭」と呼ばれるようになった。「江戸名所図会」という江戸時代の観光案内においては、江戸近郊で盛大に続けられている古い祭りとして紹介され「五月五日六所宮祭礼之図」が掲載されている。また、幕末に来日したスイスの外交官アンベールはくらやみ祭りの詳細な記録を残しており、「LA MATSOURI DE ROKSA-MIA:RETOUR TEMPLE APRES LA PURIFICATION DES LIEUX SACRES」には祭りのイラストが掲載されている。府中市の中心部を六張もの大太鼓と八基の神輿が回る壮大な祭として知られている。"
