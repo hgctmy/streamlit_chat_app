@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import streamlit as st
 import openai
 import kensaku
-import streamlit as st
 
 
 st.title("ニュース解説チャットボット")
