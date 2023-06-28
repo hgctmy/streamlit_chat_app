@@ -73,7 +73,7 @@ while True:
                 break
             if not check:
                 st.stop()
-        placeholder.markdown(q)
+        placeholder.write(f'<p style="text-align: right">{q}</p>', unsafe_allow_html=True)
     # 質問に答えてもらう
     choice = {"role": "user", "content": q}  # 質問候補文
     assistant_1.append(choice)
