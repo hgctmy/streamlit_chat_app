@@ -18,7 +18,7 @@ client = OpenAI(
 st.session_state.setdefault('past', ['start'])
 st.session_state.setdefault('generated', [])
 st.session_state.setdefault('dialog', [])
-st.session_state.setdefault('question', None)
+st.session_state.setdefault('question', [])
 st.session_state.setdefault('answers', [])
 st.session_state.setdefault('aizuchi', '')
 st.session_state.setdefault('assistant1', [])
@@ -27,6 +27,7 @@ st.session_state.setdefault('kiji', 0)
 st.session_state.setdefault('kijitext', '')
 st.session_state.setdefault('kijistate', True)
 st.session_state.setdefault('user', control_difficulty.User())
+st.session_state.setdefault('user_input', "")
 
 
 st.title("ニュース解説対話インタフェース")
@@ -98,21 +99,21 @@ else:
 
 
 def click1(i):
-    st.session_state.user.add_scores(st.session_state.question[i])
+    st.session_state.user.add_scores(st.session_state.question[i].score)
     user_score = st.session_state.user.calc_average()
     choice = {"role": "user", "content": st.session_state.question[i].text}  # 質問候補文
     st.session_state.assistant1.append(choice)
     st.session_state.dialog.append("質問者：" + choice["content"])
     # 回答生成
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=st.session_state.assistant1
     )
     # 追加情報
     with open('prompt_add.txt') as f:
         addprompt = f.read()
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",
@@ -126,7 +127,7 @@ def click1(i):
         temperature=0
     )
 
-    st.session_state.dialog.append("解説者" + completion.choices[0].message.content + response.choices[0].message.content[4:])
+    st.session_state.dialog.append("解説者：" + completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.generated.append(completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.past.append(st.session_state.question[i].text)
 
@@ -135,21 +136,24 @@ def click1(i):
 
 
 def on_change():
-    user_score = st.session_state.user.calc_average()
+    if len(st.session_state.user.scores) > 0:
+        user_score = st.session_state.user.calc_average()
+    else:
+        user_score = 2
     user_input = st.session_state.user_input
     choice = {"role": "user", "content": user_input}  # 質問候補文
     st.session_state.assistant1.append(choice)
     st.session_state.dialog.append("質問者：" + choice["content"])
     # 回答生成
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=st.session_state.assistant1
     )
     # 追加情報
     with open('prompt_add.txt') as f:
         addprompt = f.read()
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",
@@ -163,7 +167,7 @@ def on_change():
         temperature=0
     )
 
-    st.session_state.dialog.append("解説者" + completion.choices[0].message.content + response.choices[0].message.content[4:])
+    st.session_state.dialog.append("解説者：" + completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.generated.append(completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.past.append(st.session_state.question[i].text)
 
@@ -190,4 +194,4 @@ with button_placeholder.container():
     st.button(choices[0], key='b1', on_click=lambda: click1(0))
     st.button(choices[1], key='b2', on_click=lambda: click1(1))
     st.button(choices[2], key='b3', on_click=lambda: click1(2))
-    st.text_input('したい質問が候補になければこちらから手入力してください', on_change=on_change(), key=user_input)
+    st.text_input('したい質問が候補になければこちらから手入力してください', on_change=lambda: on_change(), key="user_input")

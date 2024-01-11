@@ -25,7 +25,7 @@ class Questions:
 
 def create_question(dialog, article, user_score):
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",
@@ -41,7 +41,7 @@ def create_question(dialog, article, user_score):
     qlist = re.findall(r"質問：(.*)", response.choices[0].message.content)
     q = "\n".join([str(i - 2) + ". " + qlist[i] for i in [3, 4, 5, 6, 7, 8]])
     res = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-1106-preview",
         messages=[
             {
                 "role": "system",
@@ -75,7 +75,7 @@ def create_question(dialog, article, user_score):
             return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qsup[1], 2)]
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
             qsup = client.chat.completions.create(
-                model="gpt-4-1106-preview",
+                model="gpt-4",
                 messages=[
                     {
                         "role": "system",
@@ -92,7 +92,7 @@ def create_question(dialog, article, user_score):
             return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qsup[0], 2)]
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
             qsup = client.chat.completions.create(
-                model="gpt-4-1106-preview",
+                model="gpt-4",
                 messages=[
                     {
                         "role": "system",
@@ -109,7 +109,7 @@ def create_question(dialog, article, user_score):
             return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qsup[0], 2)]
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
             qsup = client.chat.completions.create(
-                model="gpt-4-1106-preview",
+                model="gpt-4",
                 messages=[
                     {
                         "role": "system",
@@ -124,11 +124,13 @@ def create_question(dialog, article, user_score):
             )
             qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
             return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qsup[0], 2)]
+        else:
+            return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qlist[4], 2)]
     elif user_score < 2:
         if (("不能" in answer[0]) and ("不能" in answer[1]) and ("不能" in answer[2])):
             if (("不能" in answer[6]) and ("不能" in answer[7]) and ("不能" in answer[8])):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -145,7 +147,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -162,7 +164,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qlist[8], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -179,7 +181,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -197,7 +199,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
             if (("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5])):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -221,7 +223,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
             if (("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5])):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -245,7 +247,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
             if (("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5])):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -266,11 +268,13 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qlist[7], 3)]
+        else:
+            return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qlist[6], 3)]
     elif user_score < 2.5:
         if ("不能" in answer[0]) and ("不能" in answer[1]) and ("不能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -283,11 +287,11 @@ def create_question(dialog, article, user_score):
                     ],
                     temperature=0
                 )
-                qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
+                qsup = re.findall(r"質問：(.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qsup[2], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -304,7 +308,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[8], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -321,7 +325,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -339,7 +343,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -356,7 +360,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[5], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -373,7 +377,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[5], 2), Question(qlist[8], 3), Question(qsup[0], 2)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -390,7 +394,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[5], 2), Question(qlist[6], 3), Question(qsup[0], 2)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -408,7 +412,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -425,7 +429,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[3], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -442,7 +446,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[3], 2), Question(qlist[8], 3), Question(qsup[0], 2)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -459,7 +463,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qsup[0], 2)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -477,7 +481,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -494,7 +498,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[4], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -511,7 +515,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[4], 1), Question(qlist[8], 2), Question(qsup[0], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -528,7 +532,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[4], 1), Question(qlist[6], 2), Question(qsup[0], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -543,11 +547,13 @@ def create_question(dialog, article, user_score):
                 )
                 qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[4], 1), Question(qlist[7], 2), Question(qsup[0], 3)]
+        else:
+            return [Question(qlist[3], 2), Question(qlist[4], 2), Question(qlist[6], 3)]
     else:
         if ("不能" in answer[0]) and ("不能" in answer[1]) and ("不能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -560,11 +566,11 @@ def create_question(dialog, article, user_score):
                     ],
                     temperature=0
                 )
-                qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
+                qsup = re.findall(r"質問：(.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qsup[2], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -581,7 +587,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[8], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -598,7 +604,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -616,7 +622,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -633,7 +639,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[5], 2), Question(qsup[0], 3), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -650,7 +656,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[5], 2), Question(qlist[8], 3), Question(qsup[0], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -667,7 +673,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[5], 2), Question(qlist[6], 3), Question(qsup[0], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -685,7 +691,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -702,7 +708,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[3], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -719,7 +725,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[3], 2), Question(qlist[8], 3), Question(qsup[0], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -736,7 +742,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qsup[0], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -754,7 +760,7 @@ def create_question(dialog, article, user_score):
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -771,7 +777,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[4], 2), Question(qsup[0], 3), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -788,7 +794,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[4], 2), Question(qlist[8], 3), Question(qsup[0], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -805,7 +811,7 @@ def create_question(dialog, article, user_score):
                 return [Question(qlist[4], 2), Question(qlist[6], 3), Question(qsup[0], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
                 qsup = client.chat.completions.create(
-                    model="gpt-4-1106-preview",
+                    model="gpt-4",
                     messages=[
                         {
                             "role": "system",
@@ -820,6 +826,8 @@ def create_question(dialog, article, user_score):
                 )
                 qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[4], 2), Question(qlist[7], 3), Question(qsup[0], 3)]
+        else:
+            return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qlist[7], 3)]
 
 
 if __name__ == "__main__":
