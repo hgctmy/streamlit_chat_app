@@ -8,6 +8,14 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 import create_question
 import control_difficulty
+import gspread
+from google.oauth2.service_account import Credentials
+
+
+scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+credentials = Credentials.from_service_account_file("crafty-student-389707-527f851a906a.json", scopes=scope)
+gc = gspread.authorize(credentials)
+
 
 load_dotenv(join(dirname(__file__), '.env'))
 
@@ -26,9 +34,11 @@ st.session_state.setdefault('exampletexts', '')
 st.session_state.setdefault('kiji', 0)
 st.session_state.setdefault('kijitext', '')
 st.session_state.setdefault('kijistate', True)
+st.session_state.setdefault('end', False)
 st.session_state.setdefault('user', control_difficulty.User())
 st.session_state.setdefault('user_input', "")
-
+st.session_state.setdefault('worker', "")
+st.session_state.setdefault('workbook', None)
 
 st.title("ニュース解説対話インタフェース")
 st.markdown("選んだニュースをチャットボットが対話形式で解説してくれます．提示される質問や反応を選んで対話を進めましょう！")
@@ -37,6 +47,11 @@ kijisentaku = st.empty()
 
 
 def first():
+    # ログ用スプレッドシート作成
+    st.session_state.workbook = gc.create("propose_" + st.session_state.worker)
+    ws = st.session_state.workbook.get_worksheet(0)
+    ws.append_row(["選ばれた記事", st.session_state.kiji])
+    ws.append_row(["現在のユーザの理解度", "質問候補1", "難易度", "質問候補2", "難易度", "質問候補3", "難易度", "選ばれた質問", "難易度"])
     # 説明してもらう文章
     exampletexts1 = "バイデン米大統領は１５日（日本時間１６日）、サンフランシスコ近郊で中国の習近平国家主席と会談した。両首脳は、米中間の誤解や判断ミスによる軍事衝突など不測の事態を回避するため、国防相間を含む軍部同士での対話再開で合意。台湾問題を巡っては、バイデン氏が力による現状変更を行わないよう訴え、習氏は米国による台湾への軍事支援を中止するよう求めた。首脳間の電話による対話チャンネルの開設でも一致した。会談は昨年１１月にインドネシアで行われて以来以来１年ぶり。サンフランシスコ近郊の庭園で行われ、両者の会談は昼食や敷地内の散歩を含めて４時間に上った。バイデン氏は終了後の記者会見で「会談は建設的かつ生産的」で「重要な進展をなした」と強調した。会談冒頭、バイデン氏は、激化する競争や対立をめぐり「首脳同士が誤解せず理解し合うことが最重要だ」としたうえで「競争が紛争に向かわないようにする必要がある」とし、互いの判断ミスが軍事衝突に発展するリスクを回避するため対話の重要性を強調した。習氏も「米中は世界最重要の二国間関係」としたうえで「大国が背を向け合うことは選択肢ではない」「紛争や対立は両国に耐えられない結果をもたらす」と強調した。軍部同士の対話は昨夏のペロシ下院議長（当時）台湾訪問を契機に中国側が中断。米政府高官によると、両首脳は国防相間で、政策対話や軍高官による作戦レベルの対話などを行うことで合意した。会談では、バイデン氏が南シナ海などで中国による米軍機や艦船への妨害行為が増加していることに懸念を表明。米国の「一つの中国」政策と台湾海峡の現状維持の重要性を強調した。中国国営新華社通信によると、習氏は台湾問題について「中米関係の中で最も重要で敏感な問題だ」とした上で「米側は『台湾独立』を支持しない態度を具体的な行動で体現し、台湾を武装させるのをやめ、中国の平和統一を支持すべきだ」とクギを刺した。両首脳は、人工知能（ＡＩ）に関する対話開始や米中間の旅客便の大幅増に取り組むことで合意。米国で、中国が原料を輸出する医療用麻薬フェンタニル乱用が社会問題となっていることを踏まえ、薬物対策で作業部会を設けることでも一致した。"
     exampletexts2 = "再来年１月の大学入学共通テストから「情報Ｉ」が加わるのを前に、個別入試でも導入を予定している国立の電気通信大学で、「情報Ｉ」の試作問題の体験会が開かれました。東京・調布市にある国立の電気通信大学は、再来年１月から大学入学共通テストの出題科目に加わる「情報Ｉ」を、個別入試の選択科目でも導入する予定で、２６日は、オープンキャンパスに参加した高校２年生およそ８０人が本番さながらの環境で試作問題を体験しました。この中では、インターネット上の情報を取得できる仕組みを体系的に整理して解答する問題や、穴あきになったプログラムを関数などを選択して完成させる問題も出されました。大学では「情報Ｉ」の配点を共通テストでは全体の１割にあたる５０点、個別入試で選択すれば、２割にあたる１００点とする予定で、福岡県から参加した生徒は「情報の問題の傾向がわかってよかったです。第一志望なので絶対合格できるよう頑張りたい」と話していました。また２６日は、一部の入試で導入予定の、パソコンなどの端末で受験するシステムの体験も行われていました。電気通信大学の成見哲副学長は「プログラミングの力に加え数学的、論理的な思考力を問う内容にしました。情報技術は入学後も役立つのでデータ処理などの経験を積んでほしい」と話していました。"
@@ -83,7 +98,8 @@ def initfn():
     with kijisentaku.container():
         st.session_state.kijitext = st.radio("選んでください", (kijilist))
         st.session_state.kiji = kijilist.index(st.session_state.kijitext)
-        if not st.button("記事を選択しました．", on_click=lambda: first(), key='first'):
+        st.session_state.worker = st.text_input("ワーカ名を入力し，エンターキーを押してください。", key="workername")
+        if not st.button("ワーカ名を入力し，記事を選択しました．", on_click=lambda: first(), key='first'):
             st.stop()
     st.session_state.kijistate = False
 
@@ -98,9 +114,14 @@ else:
     notinitfn()
 
 
+# 質問が選ばれたら実行する関数
 def click1(i):
     st.session_state.user.add_scores(st.session_state.question[i].score)
     user_score = st.session_state.user.calc_average()
+    # ログに追加
+    ws = st.session_state.workbook.get_worksheet(0)
+    ws.append_row([user_score, st.session_state.question[0].text, st.session_state.question[0].score, st.session_state.question[1].text, st.session_state.question[1].score, st.session_state.question[1].text, st.session_state.question[2].score, st.session_state.question[i].text, st.session_state.question[i].score])
+
     choice = {"role": "user", "content": st.session_state.question[i].text}  # 質問候補文
     st.session_state.assistant1.append(choice)
     st.session_state.dialog.append("質問者：" + choice["content"])
@@ -126,22 +147,26 @@ def click1(i):
         ],
         temperature=0
     )
-
     st.session_state.dialog.append("解説者：" + completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.generated.append(completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.past.append(st.session_state.question[i].text)
-
+    if len(st.session_state.past) > 3:
+        st.session_state.end = 1
     # 質問生成
     st.session_state.question = create_question.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, user_score)
 
 
+# 手入力質問されたとき
 def on_change():
     if len(st.session_state.user.scores) > 0:
         user_score = st.session_state.user.calc_average()
     else:
         user_score = 2
+        # ログに追加
+    ws = st.session_state.workbook.get_worksheet(0)
+    ws.append_row(["-", "-", "-", "-", "-", "-", "-", st.session_state.user_input, "-"])
     user_input = st.session_state.user_input
-    choice = {"role": "user", "content": user_input}  # 質問候補文
+    choice = {"role": "user", "content": user_input}  # 質問
     st.session_state.assistant1.append(choice)
     st.session_state.dialog.append("質問者：" + choice["content"])
     # 回答生成
@@ -166,13 +191,14 @@ def on_change():
         ],
         temperature=0
     )
-
     st.session_state.dialog.append("解説者：" + completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.generated.append(completion.choices[0].message.content + response.choices[0].message.content[4:])
     st.session_state.past.append(st.session_state.question[i].text)
-
+    if len(st.session_state.past) > 4:
+        st.session_state.end = 1
     # 質問生成
     st.session_state.question = create_question.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, user_score)
+    st.session_state.user_input = ""
 
 
 chat_placeholder = st.empty()
@@ -195,3 +221,35 @@ with button_placeholder.container():
     st.button(choices[1], key='b2', on_click=lambda: click1(1))
     st.button(choices[2], key='b3', on_click=lambda: click1(2))
     st.text_input('したい質問が候補になければこちらから手入力してください', on_change=lambda: on_change(), key="user_input")
+
+end_placeholder = st.empty()
+
+
+def end_fn():
+    with end_placeholder.container():
+        if not st.button("終了します", on_click=lambda: finish(), key='reload'):
+            st.stop()
+
+
+def finish():
+    ws = st.session_state.workbook.add_worksheet('対話履歴', rows=100, cols=26)
+    ws.append_rows(st.session_state.dialog)
+    st.session_state.workbook.share('hgctomo@gmail.com', perm_type='user', role='writer')
+    st.session_state.past = ['start']
+    st.session_state.generated = []
+    st.session_state.dialog = []
+    st.session_state.question = []
+    st.session_state.answers = []
+    st.session_state.aizuchi = ''
+    st.session_state.assistant1 = []
+    st.session_state.exampletexts = ''
+    st.session_state.kiji = 0
+    st.session_state.kijitext = ''
+    st.session_state.kijistate = True
+    st.session_state.end = False
+    st.session_state.user = control_difficulty.User()
+    st.session_state.user_input = ""
+
+
+if st.session_state.end == True:
+    end_fn()
