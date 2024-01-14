@@ -1,5 +1,4 @@
 openai==1.3.5
 streamlit-chat==0.1.1
-python-dotenv
 gspread==5.12.4
 google-auth==2.20.0

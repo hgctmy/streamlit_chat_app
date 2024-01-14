@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 from openai import OpenAI
 import re
-import os
-from os.path import join, dirname
-from dotenv import load_dotenv
+import streamlit as st
 
-load_dotenv(join(dirname(__file__), '.env'))
 
 client = OpenAI(
-    api_key=os.environ.get("API_KEY"),
+    api_key=st.secrets.OpenAIAPI.openai_api_key,
 )
 
 

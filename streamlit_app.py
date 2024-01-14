@@ -3,9 +3,6 @@ import streamlit as st
 from openai import OpenAI
 from streamlit_chat import message
 import re
-import os
-from os.path import join, dirname
-from dotenv import load_dotenv
 import create_question
 import control_difficulty
 import gspread
@@ -17,10 +14,8 @@ credentials = Credentials.from_service_account_file("crafty-student-389707-527f8
 gc = gspread.authorize(credentials)
 
 
-load_dotenv(join(dirname(__file__), '.env'))
-
 client = OpenAI(
-    api_key=os.environ.get("API_KEY"),
+    api_key=st.secrets.OpenAIAPI.openai_api_key,
 )
 
 st.session_state.setdefault('past', ['start'])
