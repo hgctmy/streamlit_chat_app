@@ -9,8 +9,9 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 
-scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-credentials = Credentials.from_service_account_file("crafty-student-389707-527f851a906a.json", scopes=scope)
+service_account_key = st.secrets.GoogleKey.json_key
+credentials = Credentials.from_service_account_info(service_account_key)
+scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
 gc = gspread.authorize(credentials)
 
 
