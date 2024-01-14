@@ -12,7 +12,7 @@ import json
 service_account_key = json.loads(st.secrets.GoogleKey.json_key)
 credentials = Credentials.from_service_account_info(service_account_key)
 scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
-gc = gspread.authorize(credentials)
+gc = gspread.authorize(scoped_credentials)
 
 
 client = OpenAI(
