@@ -73,26 +73,6 @@ def first():
     st.session_state.dialog.append("解説者：" + a1message)
 
     # 初めの質問候補を生成
-    '''
-    with open('prompt_qg.txt') as f:
-        qgprompt = f.read()
-    response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
-        messages=[
-            {
-                "role": "system",
-                "content": qgprompt
-            },
-            {
-                "role": "user",
-                "content": "==入力==\n##ニュース記事##\n" + st.session_state.exampletexts + "\n\n##対話履歴##\n" + "\n".join(st.session_state.dialog) + "\n\n==出力=="
-            }
-        ],
-        temperature=0
-    )
-    question = re.findall(r"質問：(.*)", response.choices[0].message.content)
-    st.session_state.question = [create_question.Question(question, i + 1) for i, question in enumerate(question)]
-    '''
     st.session_state.question = create_question.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, 1.5)
     st.session_state.generated.append(a1message)
 
