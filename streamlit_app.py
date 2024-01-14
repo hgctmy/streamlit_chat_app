@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
-from streamlit_chat import message
 from openai import OpenAI
+from streamlit_chat import message
 import re
 import os
 from os.path import join, dirname
