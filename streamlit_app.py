@@ -7,9 +7,9 @@ import create_question
 import control_difficulty
 import gspread
 from google.oauth2.service_account import Credentials
+import json
 
-
-service_account_key = st.secrets.GoogleKey.json_key
+service_account_key = json.loads(st.secrets.GoogleKey.json_key)
 credentials = Credentials.from_service_account_info(service_account_key)
 scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
 gc = gspread.authorize(credentials)
