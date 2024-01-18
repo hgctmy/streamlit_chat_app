@@ -66,7 +66,7 @@ def create_question(dialog, article, user_score):
             temperature=0,
         )
         answer = re.findall(r". (.*)", res.choices[0].message.content)
-        st.session_state.db.append_row([str(message2), answer])
+        st.session_state.db.append_row([str(message2), res.choices[0].message.content])
     if user_score < 1.5:
         if ("不能" in answer[0]) and ("不能" in answer[1]) and ("不能" in answer[2]):
             message = [
