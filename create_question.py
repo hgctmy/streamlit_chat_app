@@ -3,7 +3,16 @@ from openai import OpenAI
 import re
 import streamlit as st
 import gspread
+from google.oauth2.service_account import Credentials
+import json
 
+service_account_key = json.loads(st.secrets.GoogleKey.json_key)
+credentials = Credentials.from_service_account_info(service_account_key)
+scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
+gc = gspread.authorize(scoped_credentials)
+spreadsheet_url = "https://docs.google.com/spreadsheets/d/1giRTDA6ZodJWUSOEyGXfWO1895ngTAzC6PHQThKwRIg/edit#gid=0"
+
+worksheet = gc.open_by_url(spreadsheet_url).worksheet("question")
 
 client = OpenAI(
     api_key=st.secrets.OpenAIAPI.openai_api_key,
@@ -32,16 +41,16 @@ def create_question(dialog, article, user_score):
             "content": "==入力==\n##対話履歴##\n" + dialog + "\n\n==出力=="
         }
     ]
-    cell = st.session_state.db.find(str(message1))
+    cell = worksheet.find(str(message1))
     if cell:
-        qlist = re.findall(r"質問：(.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+        qlist = re.findall(r"質問：(.*)", worksheet.cell(cell.row, cell.col + 1).value)
     else:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=message1,
             temperature=0
         )
-        st.session_state.db.append_row([str(message1), response.choices[0].message.content])
+        worksheet.append_row([str(message1), response.choices[0].message.content])
         qlist = re.findall(r"質問：(.*)", response.choices[0].message.content)
     q = "\n".join([str(i - 2) + ". " + qlist[i] for i in [3, 4, 5, 6, 7, 8]])
     message2 = [
@@ -54,9 +63,9 @@ def create_question(dialog, article, user_score):
             "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "##質問##" + q
         }
     ]
-    cell = st.session_state.db.find(str(message2))
+    cell = worksheet.find(str(message2))
     if cell:
-        answer = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+        answer = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
     else:
         res = client.chat.completions.create(
             model="gpt-4-1106-preview",
@@ -64,7 +73,7 @@ def create_question(dialog, article, user_score):
             temperature=0,
         )
         answer = re.findall(r". (.*)", res.choices[0].message.content)
-        st.session_state.db.append_row([str(message2), answer])
+        worksheet.append_row([str(message2), answer])
     if user_score < 1.5:
         if ("不能" in answer[0]) and ("不能" in answer[1]) and ("不能" in answer[2]):
             message = [
@@ -77,16 +86,16 @@ def create_question(dialog, article, user_score):
                     "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                 }
             ]
-            cell = st.session_state.db.find(str(message))
+            cell = worksheet.find(str(message))
             if cell:
-                qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
             else:
                 qsup = client.chat.completions.create(
                     model="gpt-4",
                     messages=message,
                     temperature=0
                 )
-                st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                worksheet.append_row([str(message), qsup.choices[0].message.content])
                 qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
             return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qsup[1], 2)]
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
@@ -100,16 +109,16 @@ def create_question(dialog, article, user_score):
                     "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                 }
             ]
-            cell = st.session_state.db.find(str(message))
+            cell = worksheet.find(str(message))
             if cell:
-                qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                qsup1 = worksheet.cell(cell.row, cell.col + 1).value
             else:
                 qsup = client.chat.completions.create(
                     model="gpt-4",
                     messages=message,
                     temperature=0
                 )
-                st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                worksheet.append_row([str(message), qsup.choices[0].message.content])
                 qsup1 = qsup.choices[0].message.content
             return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qsup1, 2)]
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
@@ -123,16 +132,16 @@ def create_question(dialog, article, user_score):
                     "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                 }
             ]
-            cell = st.session_state.db.find(str(message))
+            cell = worksheet.find(str(message))
             if cell:
-                qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                qsup1 = worksheet.cell(cell.row, cell.col + 1).value
             else:
                 qsup = client.chat.completions.create(
                     model="gpt-4",
                     messages=message,
                     temperature=0
                 )
-                st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                worksheet.append_row([str(message), qsup.choices[0].message.content])
                 qsup1 = qsup.choices[0].message.content
             return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qsup1, 2)]
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
@@ -146,16 +155,16 @@ def create_question(dialog, article, user_score):
                     "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                 }
             ]
-            cell = st.session_state.db.find(str(message))
+            cell = worksheet.find(str(message))
             if cell:
-                qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                qsup1 = worksheet.cell(cell.row, cell.col + 1).value
             else:
                 qsup = client.chat.completions.create(
                     model="gpt-4",
                     messages=message,
                     temperature=0
                 )
-                st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                worksheet.append_row([str(message), qsup.choices[0].message.content])
                 qsup1 = qsup.choices[0].message.content
             return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qsup1, 2)]
         else:
@@ -173,16 +182,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r"質問：(.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r"質問：(.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*)", qsup.choices[0].message.content)
                 return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -196,16 +205,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qsup1, 2), Question(qlist[8], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -219,16 +228,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qsup1, 2), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -242,16 +251,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qsup1, 2), Question(qlist[7], 3)]
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
@@ -266,16 +275,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -296,16 +305,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -326,16 +335,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -359,16 +368,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r"質問：(.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r"質問：(.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qsup[2], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -382,16 +391,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r"質問：(.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r"質問：(.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*)", qsup.choices[0].message.content)
                 qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[8], 3)]
@@ -406,16 +415,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -429,16 +438,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[7], 3)]
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
@@ -453,16 +462,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[5], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -476,16 +485,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[5], 2), Question(qlist[8], 3), Question(qsup[0], 2)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -499,16 +508,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[6], 3), Question(qsup1, 2)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -522,16 +531,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[7], 3), Question(qsup1, 2)]
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
@@ -546,16 +555,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[3], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -569,16 +578,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[8], 3), Question(qsup1, 2)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -592,16 +601,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qsup1, 2)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -615,16 +624,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[7], 3), Question(qsup1, 2)]
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
@@ -639,16 +648,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[4], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -662,16 +671,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 1), Question(qlist[8], 2), Question(qsup1, 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -685,16 +694,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 1), Question(qlist[6], 2), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -708,16 +717,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 1), Question(qlist[7], 2), Question(qsup1, 3)]
         else:
@@ -735,16 +744,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r"質問：(.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r"質問：(.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qsup[2], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -758,16 +767,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[8], 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -781,16 +790,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[6], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -804,16 +813,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[7], 3)]
         elif ("不能" in answer[0]) and ("不能" in answer[1]):
@@ -828,16 +837,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[5], 2), Question(qsup[0], 3), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -851,16 +860,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[8], 3), Question(qsup1, 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -874,16 +883,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[6], 3), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -897,16 +906,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[7], 3), Question(qsup1, 3)]
         elif ("不能" in answer[1]) and ("不能" in answer[2]):
@@ -921,16 +930,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[3], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -944,16 +953,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[8], 3), Question(qsup1, 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -967,16 +976,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -990,16 +999,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[7], 3), Question(qsup1, 3)]
         elif ("不能" in answer[0]) and ("不能" in answer[2]):
@@ -1014,16 +1023,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup = re.findall(r". (.*)", st.session_state.db.cell(cell.row, cell.col + 1).value)
+                    qsup = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[4], 2), Question(qsup[0], 3), Question(qsup[1], 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[4]):
@@ -1037,16 +1046,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 2), Question(qlist[8], 3), Question(qsup1, 3)]
             elif ("不能" in answer[4]) and ("不能" in answer[5]):
@@ -1060,16 +1069,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 2), Question(qlist[6], 3), Question(qsup1, 3)]
             elif ("不能" in answer[3]) and ("不能" in answer[5]):
@@ -1083,16 +1092,16 @@ def create_question(dialog, article, user_score):
                         "content": "==入力==\n##ニュース記事##\n" + article + "\n\n##対話履歴##\n" + dialog + "\n\n==出力=="
                     }
                 ]
-                cell = st.session_state.db.find(str(message))
+                cell = worksheet.find(str(message))
                 if cell:
-                    qsup1 = st.session_state.db.cell(cell.row, cell.col + 1).value
+                    qsup1 = worksheet.cell(cell.row, cell.col + 1).value
                 else:
                     qsup = client.chat.completions.create(
                         model="gpt-4",
                         messages=message,
                         temperature=0
                     )
-                    st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
+                    worksheet.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 2), Question(qlist[7], 3), Question(qsup1, 3)]
         else:
