@@ -43,7 +43,7 @@ def create_question(dialog, article, user_score):
     ]
     cell = worksheet.find(str(message1))
     if cell:
-        qlist = re.findall(r"質問：(.*)", worksheet.cell(cell.row, cell.col + 1).value)
+        qlist = re.findall(r". (.*)", worksheet.cell(cell.row, cell.col + 1).value)
     else:
         response = client.chat.completions.create(
             model="gpt-4",
@@ -51,7 +51,7 @@ def create_question(dialog, article, user_score):
             temperature=0
         )
         worksheet.append_row([str(message1), response.choices[0].message.content])
-        qlist = re.findall(r"質問：(.*)", response.choices[0].message.content)
+        qlist = re.findall(r". (.*)", response.choices[0].message.content)
     q = "\n".join([str(i - 2) + ". " + qlist[i] for i in [3, 4, 5, 6, 7, 8]])
     message2 = [
         {
