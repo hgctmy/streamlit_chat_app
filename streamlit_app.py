@@ -14,6 +14,7 @@ credentials = Credentials.from_service_account_info(service_account_key)
 scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
 gc = gspread.authorize(scoped_credentials)
 
+spreadsheet_url = "https://docs.google.com/spreadsheets/d/1giRTDA6ZodJWUSOEyGXfWO1895ngTAzC6PHQThKwRIg/edit#gid=0"
 
 client = OpenAI(
     api_key=st.secrets.OpenAIAPI.openai_api_key,
@@ -35,6 +36,8 @@ st.session_state.setdefault('user', control_difficulty.User())
 st.session_state.setdefault('user_input', "")
 st.session_state.setdefault('worker', "")
 st.session_state.setdefault('workbook', None)
+st.session_state.setdefault('db', gc.open_by_url(spreadsheet_url).get_worksheet(0))
+
 
 st.title("ニュース解説対話型インタフェース2")
 st.markdown("選んだニュースをチャットボットが対話形式で解説してくれます．提示される質問を選んで対話を進めてください．")
@@ -60,12 +63,18 @@ def first():
         {"role": "system", "content": "あなたは便利なアシスタントです．必要に応じて以下の文章を参照して簡潔に答えてください．\n\n###文章###\n" + st.session_state.exampletexts},
         {"role": "user", "content": "まずは文章の導入部分を1文で簡単に述べてください．"}
     ]
-    completion1 = client.chat.completions.create(
-        model="gpt-4",
-        messages=st.session_state.assistant1
-    )
-    a1message = completion1.choices[0].message.content
-
+    cell = st.session_state.db.find(str(st.session_state.assistant1))
+    if cell:
+        a1message = st.session_state.db.cell(cell.row, cell.col + 1).value
+    else:
+        completion1 = client.chat.completions.create(
+            model="gpt-4",
+            messages=st.session_state.assistant1,
+            temperature=0
+        )
+        a1message = completion1.choices[0].message.content
+        st.session_state.db.append_row([str(st.session_state.assistant1), a1message])
+    st.session_state.assistant1.append({"role": "system", "content": a1message})
     st.session_state.dialog.append("解説者：" + a1message)
 
     # 初めの質問候補を生成
@@ -105,29 +114,45 @@ def click1(i):
     st.session_state.assistant1.append(choice)
     st.session_state.dialog.append("質問者：" + choice["content"])
     # 回答生成
-    completion = client.chat.completions.create(
-        model="gpt-4",
-        messages=st.session_state.assistant1
-    )
+    cell = st.session_state.db.find(str(st.session_state.assistant1))
+    if cell:
+        answer = st.session_state.db.cell(cell.row, cell.col + 1).value
+    else:
+        completion = client.chat.completions.create(
+            model="gpt-4",
+            messages=st.session_state.assistant1,
+            temperature=0
+        )
+        answer = completion.choices[0].message.content
+        st.session_state.db.append_row([str(st.session_state.assistant1), answer])
+    st.session_state.dialog.append("解説者：" + answer)
     # 追加情報
     with open('prompt_add.txt') as f:
         addprompt = f.read()
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": addprompt
-            },
-            {
-                "role": "user",
-                "content": "==入力==\n##ニュース記事##\n" + st.session_state.exampletexts + "\n\n##対話履歴##\n" + "\n".join(st.session_state.dialog) + "\n\n==出力=="
-            }
-        ],
-        temperature=0
-    )
-    st.session_state.dialog.append("解説者：" + completion.choices[0].message.content + response.choices[0].message.content)
-    st.session_state.generated.append(completion.choices[0].message.content + response.choices[0].message.content)
+    message = [
+        {
+            "role": "system",
+            "content": addprompt
+        },
+        {
+            "role": "user",
+            "content": "==入力==\n##ニュース記事##\n" + st.session_state.exampletexts + "\n\n##対話履歴##\n" + "\n".join(st.session_state.dialog) + "\n\n==出力=="
+        }
+    ]
+    cell = st.session_state.db.find(str(message))
+    if cell:
+        add = st.session_state.db.cell(cell.row, cell.col + 1).value
+    else:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=message,
+            temperature=0,
+        )
+        add = response.choices[0].message.content
+        st.session_state.db.append_row([str(message), add])
+    st.session_state.dialog[-1] = st.session_state.dialog[-1] + add
+    st.session_state.generated.append(answer + add)
+    st.session_state.assistant1.append({"role": "system", "content": answer})
     st.session_state.past.append(st.session_state.question[i].text)
     if len(st.session_state.past) > 3:
         st.session_state.end = 1
@@ -149,30 +174,47 @@ def on_change():
     st.session_state.assistant1.append(choice)
     st.session_state.dialog.append("質問者：" + choice["content"])
     # 回答生成
-    completion = client.chat.completions.create(
-        model="gpt-4",
-        messages=st.session_state.assistant1
-    )
+    cell = st.session_state.db.find(str(st.session_state.assistant1))
+    if cell:
+        answer = st.session_state.db.cell(cell.row, cell.col + 1).value
+    else:
+        completion = client.chat.completions.create(
+            model="gpt-4",
+            messages=st.session_state.assistant1,
+            temperature=0
+        )
+        answer = completion.choices[0].message.content
+        st.session_state.db.append_row([str(st.session_state.assistant1), answer])
+
+    st.session_state.dialog.append("解説者：" + answer)
     # 追加情報
     with open('prompt_add.txt') as f:
         addprompt = f.read()
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": addprompt
-            },
-            {
-                "role": "user",
-                "content": "==入力==\n##ニュース記事##\n" + st.session_state.exampletexts + "\n\n##対話履歴##\n" + "\n".join(st.session_state.dialog) + "\n\n==出力=="
-            }
-        ],
-        temperature=0
-    )
-    st.session_state.dialog.append("解説者：" + completion.choices[0].message.content + response.choices[0].message.content)
-    st.session_state.generated.append(completion.choices[0].message.content + response.choices[0].message.content)
-    st.session_state.past.append(st.session_state.question[i].text)
+    message = [
+        {
+            "role": "system",
+            "content": addprompt
+        },
+        {
+            "role": "user",
+            "content": "==入力==\n##ニュース記事##\n" + st.session_state.exampletexts + "\n\n##対話履歴##\n" + "\n".join(st.session_state.dialog) + "\n\n==出力=="
+        }
+    ]
+    cell = st.session_state.db.find(str(message))
+    if cell:
+        add = st.session_state.db.cell(cell.row, cell.col + 1).value
+    else:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=message,
+            temperature=0,
+        )
+        add = response.choices[0].message.content
+        st.session_state.db.append_row([str(message), add])
+    st.session_state.dialog[-1] = st.session_state.dialog[-1] + add
+    st.session_state.generated.append(answer + add)
+    st.session_state.assistant1.append({"role": "system", "content": answer})
+    st.session_state.past.append(user_input)
     if len(st.session_state.past) > 4:
         st.session_state.end = 1
     # 質問生成
