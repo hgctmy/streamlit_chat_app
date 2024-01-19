@@ -187,7 +187,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*?？)", qsup.choices[0].message.content)
                 return [Question(qlist[0], 1), Question(qsup[0], 2), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -210,7 +210,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qsup1, 2), Question(qlist[8], 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -233,7 +233,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qsup1, 2), Question(qlist[6], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            else:
                 message = [
                     {
                         "role": "system",
@@ -256,7 +256,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qsup1, 2), Question(qlist[7], 3)]
-        elif ("不能" in answer[0]) and ("不能" in answer[1]):
+        elif ("可能" in answer[2]):
             if (("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5])):
                 message = [
                     {
@@ -280,13 +280,13 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qlist[8], 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qlist[6], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 return [Question(qlist[0], 1), Question(qlist[5], 2), Question(qlist[7], 3)]
-        elif ("不能" in answer[1]) and ("不能" in answer[2]):
+        elif ("可能" in answer[0]):
             if (("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5])):
                 message = [
                     {
@@ -310,13 +310,13 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qlist[8], 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qlist[6], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qlist[7], 3)]
-        elif ("不能" in answer[0]) and ("不能" in answer[2]):
+        elif ("可能" in answer[1]):
             if (("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5])):
                 message = [
                     {
@@ -340,11 +340,11 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qlist[8], 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qlist[6], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 return [Question(qlist[0], 1), Question(qlist[4], 2), Question(qlist[7], 3)]
         else:
             return [Question(qlist[0], 1), Question(qlist[3], 2), Question(qlist[6], 3)]
@@ -373,7 +373,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*?？)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qsup[2], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -397,7 +397,7 @@ def create_question(dialog, article, user_score):
                     qsup = re.findall(r"質問：(.*?？)", qsup.choices[0].message.content)
                 qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[8], 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -420,7 +420,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[6], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
@@ -443,7 +443,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 2), Question(qlist[7], 3)]
-        elif ("不能" in answer[0]) and ("不能" in answer[1]):
+        elif ("可能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 message = [
                     {
@@ -467,7 +467,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[5], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -490,7 +490,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[8], 3), Question(qsup1, 2)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -513,7 +513,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[6], 3), Question(qsup1, 2)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
@@ -536,7 +536,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[7], 3), Question(qsup1, 2)]
-        elif ("不能" in answer[1]) and ("不能" in answer[2]):
+        elif ("可能" in answer[0]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 message = [
                     {
@@ -560,7 +560,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[3], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -583,7 +583,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[8], 3), Question(qsup1, 2)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -606,7 +606,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qsup1, 2)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
@@ -629,7 +629,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[7], 3), Question(qsup1, 2)]
-        elif ("不能" in answer[0]) and ("不能" in answer[2]):
+        elif ("可能" in answer[1]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 message = [
                     {
@@ -653,7 +653,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[4], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -676,7 +676,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 1), Question(qlist[8], 2), Question(qsup1, 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -699,7 +699,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 1), Question(qlist[6], 2), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
@@ -749,7 +749,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r"質問：(.*?？)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qsup[2], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -772,7 +772,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[8], 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -795,7 +795,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[6], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
@@ -818,7 +818,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qsup[0], 2), Question(qsup[1], 3), Question(qlist[7], 3)]
-        elif ("不能" in answer[0]) and ("不能" in answer[1]):
+        elif ("可能" in answer[2]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 message = [
                     {
@@ -842,7 +842,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[5], 2), Question(qsup[0], 3), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -865,7 +865,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[8], 3), Question(qsup1, 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -888,7 +888,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[6], 3), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
@@ -911,7 +911,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[5], 2), Question(qlist[7], 3), Question(qsup1, 3)]
-        elif ("不能" in answer[1]) and ("不能" in answer[2]):
+        elif ("可能" in answer[0]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 message = [
                     {
@@ -935,7 +935,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[3], 2), Question(qsup[0], 2), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -958,7 +958,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[8], 3), Question(qsup1, 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -981,7 +981,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[6], 3), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[2]):
                 message = [
                     {
                         "role": "system",
@@ -1004,7 +1004,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[3], 2), Question(qlist[7], 3), Question(qsup1, 3)]
-        elif ("不能" in answer[0]) and ("不能" in answer[2]):
+        elif ("可能" in answer[1]):
             if ("不能" in answer[3]) and ("不能" in answer[4]) and ("不能" in answer[5]):
                 message = [
                     {
@@ -1028,7 +1028,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup = re.findall(r". (.*)", qsup.choices[0].message.content)
                 return [Question(qlist[4], 2), Question(qsup[0], 3), Question(qsup[1], 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[4]):
+            elif ("可能" in answer[5]):
                 message = [
                     {
                         "role": "system",
@@ -1051,7 +1051,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 2), Question(qlist[8], 3), Question(qsup1, 3)]
-            elif ("不能" in answer[4]) and ("不能" in answer[5]):
+            elif ("可能" in answer[3]):
                 message = [
                     {
                         "role": "system",
@@ -1074,7 +1074,7 @@ def create_question(dialog, article, user_score):
                     st.session_state.db.append_row([str(message), qsup.choices[0].message.content])
                     qsup1 = qsup.choices[0].message.content
                 return [Question(qlist[4], 2), Question(qlist[6], 3), Question(qsup1, 3)]
-            elif ("不能" in answer[3]) and ("不能" in answer[5]):
+            elif ("可能" in answer[4]):
                 message = [
                     {
                         "role": "system",
