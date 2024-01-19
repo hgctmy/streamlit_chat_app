@@ -270,6 +270,9 @@ def finish():
     st.session_state.end = False
     st.session_state.user = control_difficulty.User()
     st.session_state.user_input = ""
+    st.session_state.worker = ""
+    st.session_state.workbook = None
+    st.session_state.db = gc.open_by_url(spreadsheet_url).get_worksheet(0)
 
 
 if st.session_state.end == True:
