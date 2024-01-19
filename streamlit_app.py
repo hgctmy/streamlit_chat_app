@@ -60,7 +60,7 @@ def first():
     st.session_state.exampletexts = texts[st.session_state.kiji]
     # 導入文
     st.session_state.assistant1 = [
-        {"role": "system", "content": "あなたは便利なアシスタントです．必要に応じて以下の文章を参照して簡潔に答えてください．\n\n###文章###\n" + st.session_state.exampletexts},
+        {"role": "system", "content": "あなたは便利なアシスタントです．必要に応じて以下の文章を参照してできるだけ簡潔に答えてください．\n\n###文章###\n" + st.session_state.exampletexts},
         {"role": "user", "content": "まずは文章の導入部分を1文で簡単に述べてください．"}
     ]
     cell = st.session_state.db.find(str(st.session_state.assistant1))
