@@ -87,7 +87,7 @@ def initfn():
         st.session_state.kijitext = st.radio("指定された記事を選んでください", (kijilist))
         st.session_state.kiji = kijilist.index(st.session_state.kijitext)
         st.session_state.worker = st.text_input("ワーカ名を入力し，エンターキーを押してください。", key="workername")
-        if not st.button("ワーカ名を入力し，記事を選択しました．", on_click=lambda: first(), key='first'):
+        if not st.button("記事を選択し，ワーカ名を入力してエンターキーを押しました．", on_click=lambda: first(), key='first'):
             st.stop()
     st.session_state.kijistate = False
 
