@@ -255,7 +255,7 @@ def end_fn():
 def finish():
     ws = st.session_state.workbook.add_worksheet('対話履歴', rows=100, cols=26)
     ws.append_row(st.session_state.dialog)
-    # st.session_state.workbook.share('hgctomo@gmail.com', perm_type='user', role='writer')
+    st.session_state.workbook.share('hgctomo@gmail.com', perm_type='user', role='writer')
     st.session_state.past = ['start']
     st.session_state.generated = []
     st.session_state.dialog = []
