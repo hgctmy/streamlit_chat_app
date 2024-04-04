@@ -6,7 +6,6 @@ import control_difficulty
 
 
 # client = OpenAI(api_key=st.secrets.OpenAIAPI.openai_api_key,)
-client = OpenAI(api_key="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")
 
 
 st.session_state.setdefault('dialog', [])
