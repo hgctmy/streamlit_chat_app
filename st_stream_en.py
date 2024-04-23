@@ -140,13 +140,60 @@ def click(i):
         st.session_state.question = create_question_en.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, user_score)
 
 
+def on_change():
+    with chat_placeholder.container():
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+        user_input = st.session_state.user_input
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.dialog.append("**questioner:** " + user_input)
+        if len(st.session_state.user.scores) > 0:
+            user_score = st.session_state.user.calc_average()
+        else:
+            user_score = 2
+        user_score = st.session_state.user.calc_average()
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        with st.chat_message("assistant"):
+            message = [
+                {
+                    "role": "system",
+                    "content": "==instruction==\nGiven a news the history of the dialogue between the commentator and the questioner about the content of the news article as input, please create a two-sentence statement by the commentator following the dialogue. The content should be an answer to the question and additional information that introduces the next topic.\n\n==Input example==\n##news article##\nResearchers have discovered the cause of the brightest burst of light ever recorded.\n\nBut in doing so they have run up against two bigger mysteries, including one that casts doubt on where our heavy elements - like gold - come from.\n\nThe burst of light, spotted in 2022, is now known to have had an exploding star at its heart, researchers say.\n\nBut that explosion, by itself, would not have been sufficient to have shone so brightly.\n\nAnd our current theory says that some exploding stars, known as supernovas, might also produce the heavy elements in the universe such as gold and platinum.\n\nBut the team found none of these elements, raising new questions about how precious metals are produced.\n\nProf Catherine Heymans of Edinburgh University and Scotland's Astronomer Royal, who is independent of the research team, said that results like these help to drive science forward.\n\n\"The Universe is an amazing, wonderful and surprising place, and I love the way that it throws these conundrums at us!\n\n\"The fact that it is not giving us the answers we want is great, because we can go back to the drawing board and think again and come up with better theories,\" she said.\n\nThe explosion was detected by telescopes in October 2022. It came from a distant galaxy 2.4 billion light-years away, emitting light across all frequencies. But it was especially intense in its gamma rays, which are a more penetrating form of X-rays.\n\nThe gamma ray burst lasted seven minutes and was so powerful that it was off the scale, overwhelming the instruments that detected them. Subsequent readings showed that the burst was 100 times brighter than anything that had ever been recorded before, earning it the nickname among astronomers of the Brightest Of All Time or B.O.A.T.\n\nGamma ray bursts are associated with exploding supernovas, but this was so bright that it could not be easily explained. If it were a supernova, it would have had to have been absolutely enormous, according to the current theory.\n\nThe burst was so bright that it initially dazzled the instruments on Nasa's James Webb Space Telescope (JWST). The telescope had only recently become operational, and this was an incredible stroke of luck for astronomers wanting to study the phenomenon because such powerful explosions are calculated to occur once every 10,000 years.\n\nAs the light dimmed, one of JWST's instruments was able to see there had indeed been a supernova explosion. But it had not been nearly as powerful as they expected. So why then had the burst of gamma rays been off the scale?\n\nDr Peter Blanchard, from Northwestern University in Illinois in the US, who co-led the research team, doesn't know. But he wants to find out. He plans to book more time on JWST to investigate other supernova remnants.\n\n\"It could be that these gamma ray bursts and supernova explosions are not necessarily directly linked to each other and they could be separate processes going on,\" he told BBC News.\n\nDr Tanmoy Laskar, from the University of Utah and co-leader of the study, said that the B.O.A.T's power might be explained by the way in which jets of material were being sprayed out, as normally occurs during supernovas. But if these jets are narrow, they produce a more focused and so brighter beam of light.\n\n\"It's like focusing a flashlight's beam into a narrow column, as opposed to a broad beam that washes across a whole wall,\" he said. \"In fact, this was one of the narrowest jets seen for a gamma ray burst so far, which gives us a hint as to why the afterglow appeared as bright as it did\".\n\nTheory rethink\nBut what about the missing gold?\n\nOne theory is that one of the ways heavy elements - such as gold, platinum, lead and uranium - might be produced is during the extreme conditions that are created during supernovas. These are spread across the galaxy and are used in the formation of planets, which is how, the theory goes, the metals found on Earth arose.\n\nThere is evidence that heavy elements can be produced when dead stars, called neutron stars collide, a process called a kilonovae, but it's thought that not enough could be created this way. The team will investigate other supernova remnants to see if heavy elements still can be produced by exploding stars but only under specific conditions.\n\nBut the researchers found no evidence of heavy elements around the exploded star. So, is the theory wrong and heavy elements are produced some other way, or are they only produced in supernovas under certain conditions?\n\n\"Theorists need to go back and look at why an event like the B.O.A.T is not producing heavy elements when theories and simulations predict that they should,\" says Dr Blanchard.\n\n##dialogue about news article content##\n**commentator:** Artificial intelligence is now playing a crucial role in managing and preventing power outages as demand for electricity surges globally.\n\n**questioner:** What role is AI playing in the management of electricity grids according?\n\n**commentator:**  AI is being used to predict electricity supply and demand, helping to optimize when batteries should charge and discharge. Additionally, AI helps in detecting infrastructural damage and potential hazards like animal intrusions that could lead to power outages.\n\n**questioner:** Can you elaborate on how AI predicts electricity supply and demand specifically and how this information helps manage battery storage systems?\n\n==Output example==\nAI utilizes advanced algorithms and machine learning to analyze historical data and real-time inputs from various sources, such as weather patterns, consumer behavior, and energy production rates. This predictive capability allows grid operators to anticipate periods of high demand or low supply, strategically managing battery storage to either store excess energy during low demand or release energy during peak times, thus maintaining grid stability and efficiency."
+                },
+                {
+                    "role": "user",
+                    "content": "==Input==\n##news article##\n" + st.session_state.exampletexts + "\n\n##dialogue about news article content##\n" + "\n".join(st.session_state.dialog) + "\n\n==Output=="
+                }
+            ]
+            answer = database.fetch_response(st.session_state.conn, message)
+            if answer:
+                st.write(answer)
+            else:
+                stream = client.chat.completions.create(
+                    model=st.session_state["openai_model"],
+                    messages=message,
+                    stream=True,
+                    temperature=0
+                )
+                answer = st.write_stream(stream)
+                database.insert_chat_pair(st.session_state.conn, message, answer)
+        st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.session_state.dialog.append("**commentator:** " + answer)
+        if len(st.session_state.messages) > 5:
+            st.session_state.end = 1
+        # 質問生成
+        st.session_state.question = create_question_en.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, user_score)
+        st.session_state.user_input = ""
+
+
 if len(st.session_state.question) > 2:
     choices = [st.session_state.question[i].text for i in range(3)]
     with button_placeholder.container():
         st.button(choices[0], key='b1', on_click=lambda: click(0))
         st.button(choices[1], key='b2', on_click=lambda: click(1))
         st.button(choices[2], key='b3', on_click=lambda: click(2))
-        # st.text_input('したい質問が候補になければこちらから手入力してください', on_change=lambda: on_change(), key="user_input")
+        st.text_input("If you don't see the question you want to ask, please enter it manually here.", on_change=lambda: on_change(), key="user_input")
 
 end_placeholder = st.empty()
 
