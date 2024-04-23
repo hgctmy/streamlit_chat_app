@@ -207,6 +207,7 @@ end_placeholder = st.empty()
 def finish():
     with open(f'log{st.session_state.worker}.txt', mode='a')as f:
         print(f''']"対話履歴":{st.session_state.dialog}}}''', file=f)
+    st.session_state.conn.close()
     st.session_state.dialog = []
     st.session_state.question = []
     st.session_state.assistant1 = []
@@ -220,6 +221,7 @@ def finish():
     st.session_state.openai_model = "gpt-4-turbo-2024-04-09"
     st.session_state.messages = []
     st.session_state.worker = ""
+    st.session_state.conn = None
 
 
 if st.session_state.end is True:
