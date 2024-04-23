@@ -2,7 +2,6 @@
 import streamlit as st
 from openai import OpenAI
 from streamlit_chat import message
-import re
 import create_question
 import control_difficulty
 import gspread
@@ -275,5 +274,5 @@ def finish():
     st.session_state.db = gc.open_by_url(spreadsheet_url).get_worksheet(0)
 
 
-if st.session_state.end == True:
+if st.session_state.end is True:
     end_fn()

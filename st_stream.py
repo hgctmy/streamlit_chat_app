@@ -5,7 +5,7 @@ import create_question
 import control_difficulty
 
 
-# client = OpenAI(api_key=st.secrets.OpenAIAPI.openai_api_key,)
+client = OpenAI(api_key=st.secrets.OpenAIAPI.openai_api_key,)
 
 
 st.session_state.setdefault('dialog', [])
@@ -120,7 +120,7 @@ def click(i):
 
 
 if len(st.session_state.question) > 2:
-    choices = [st.session_state.question[i] for i in range(3)]
+    choices = [st.session_state.question[i].text for i in range(3)]
     with button_placeholder.container():
         st.button(choices[0], key='b1', on_click=lambda: click(0))
         st.button(choices[1], key='b2', on_click=lambda: click(1))
