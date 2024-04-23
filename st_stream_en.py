@@ -79,6 +79,8 @@ def initfn():
                 # 初めの質問候補を生成
                 st.session_state.question = create_question_en.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, 1.5)
                 st.session_state.kijistate = False
+            with open(f'log{st.session_state.worker}.txt', mode='w')as f:
+                print(f"""{{"選ばれた記事": "{st.session_state.kiji}","質問候補":[""", file=f)
 
 
 def notinitfn():
@@ -107,6 +109,8 @@ def click(i):
         st.session_state.dialog.append("**questioner:** " + choices[i])
         st.session_state.user.add_scores(st.session_state.question[i].score)
         user_score = st.session_state.user.calc_average()
+        with open(f'log{st.session_state.worker}.txt', mode='a')as f:
+            print(f"""{{"現在のユーザの理解度":"{user_score}", "質問候補1":"{st.session_state.question[0].text}", "難易度1": "{st.session_state.question[0].score}", "質問候補2":"{st.session_state.question[1].text}", "難易度2": "{st.session_state.question[1].score}","質問候補3":"{st.session_state.question[2].text}", "難易度3": "{st.session_state.question[2].score}", "選ばれた質問":"{st.session_state.question[i].text}", "難易度":"{st.session_state.question[i].score}"}}, """, file=f)
         with st.chat_message("user"):
             st.markdown(choices[i])
         with st.chat_message("assistant"):
@@ -135,7 +139,7 @@ def click(i):
         st.session_state.messages.append({"role": "assistant", "content": answer})
         st.session_state.dialog.append("**commentator:** " + answer)
         if len(st.session_state.messages) > 5:
-            st.session_state.end = 1
+            st.session_state.end = True
         # 質問生成
         st.session_state.question = create_question_en.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, user_score)
 
@@ -153,6 +157,8 @@ def on_change():
         else:
             user_score = 2
         user_score = st.session_state.user.calc_average()
+        with open(f'log{st.session_state.worker}.txt', mode='a')as f:
+            print(f"""{{"現在のユーザの理解度":"{user_score}", "質問候補1":"{st.session_state.question[0].text}", "難易度1": "{st.session_state.question[0].score}", "質問候補2":"{st.session_state.question[1].text}, "難易度2":"{st.session_state.question[1].score}","質問候補3":"{st.session_state.question[2].text}", "難易度3": "{st.session_state.question[2].score}", "選ばれた質問":"{st.session_state.user_input}", "難易度":"-"}}, """, file=f)
         with st.chat_message("user"):
             st.markdown(user_input)
         with st.chat_message("assistant"):
@@ -181,7 +187,7 @@ def on_change():
         st.session_state.messages.append({"role": "assistant", "content": answer})
         st.session_state.dialog.append("**commentator:** " + answer)
         if len(st.session_state.messages) > 5:
-            st.session_state.end = 1
+            st.session_state.end = True
         # 質問生成
         st.session_state.question = create_question_en.create_question("\n".join(st.session_state.dialog), st.session_state.exampletexts, user_score)
         st.session_state.user_input = ""
@@ -198,13 +204,9 @@ if len(st.session_state.question) > 2:
 end_placeholder = st.empty()
 
 
-def end_fn():
-    with end_placeholder.container():
-        if not st.button("Exit", on_click=lambda: finish(), key='reload'):
-            st.stop()
-
-
 def finish():
+    with open(f'log{st.session_state.worker}.txt', mode='a')as f:
+        print(f''']"対話履歴":{st.session_state.dialog}}}''', file=f)
     st.session_state.dialog = []
     st.session_state.question = []
     st.session_state.assistant1 = []
@@ -221,4 +223,6 @@ def finish():
 
 
 if st.session_state.end is True:
-    end_fn()
+    with end_placeholder.container():
+        if not st.button("Exit", on_click=lambda: finish(), key='reload'):
+            st.stop()

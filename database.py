@@ -1,4 +1,7 @@
 import sqlite3
+import threading
+
+lock = threading.Lock()
 
 
 def create_connection(db_file):
@@ -27,9 +30,10 @@ def init_db(conn):
 
 def fetch_response(conn, request):
     """ リクエストに基づいてレスポンスを検索し、存在する場合はレスポンスを返す """
-    cursor = conn.cursor()
-    cursor.execute("SELECT response FROM chat_history WHERE request=?", (str(request),))
-    response = cursor.fetchone()
+    with lock:
+        cursor = conn.cursor()
+        cursor.execute("SELECT response FROM chat_history WHERE request=?", (str(request),))
+        response = cursor.fetchone()
     return response[0] if response else None
 
 
@@ -37,9 +41,10 @@ def insert_chat_pair(conn, request, response):
     """ チャットペアをデータベースに追加 """
     sql = ''' INSERT INTO chat_history(request, response)
               VALUES(?, ?) '''
-    cursor = conn.cursor()
-    cursor.execute(sql, (str(request), response))
-    conn.commit()
+    with lock:
+        cursor = conn.cursor()
+        cursor.execute(sql, (str(request), response))
+        conn.commit()
 
 
 def get_gpt_response(prompt):
