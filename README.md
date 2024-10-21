@@ -16,4 +16,3 @@
    streamlit run st_stream_en.py
    ```
 
-## インストール
