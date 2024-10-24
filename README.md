@@ -1,6 +1,6 @@
 # 実行方法
 
-1. **依存関係をインストール**:
+1. **ライブラリのインストール**:
    ```bash
    pip install -r requirements.txt
    ```
